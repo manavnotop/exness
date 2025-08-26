@@ -1,1 +1,3 @@
-console.log("hello worlds");
+import WebSocketInstance from "./ws/websocket";
+
+new WebSocketInstance
