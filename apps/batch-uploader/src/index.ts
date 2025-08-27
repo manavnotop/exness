@@ -16,7 +16,7 @@ async function connectRedis() {
 }
 
 async function startBatchProcess(){
-  const BATCH_SIZE = 1000
+  const BATCH_SIZE = 5000
   const FLUSH_INTERVAL = 5000
 
   let batch: any[] = []
@@ -28,10 +28,10 @@ async function startBatchProcess(){
     try{
       await prismaClient.trade.createMany({
         data: batch.map(trade => ({
-          symbol: trade.s,
-          price: trade.p,
-          quantity: trade.q,
-          trade_time: new Date(Number(trade.T)),
+          symbol: trade.data.s,
+          price: trade.data.p,
+          quantity: trade.data.q,
+          trade_time: new Date(Number(trade.data.T)),
         })),
         skipDuplicates: true
       })
