@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/ws/websocket.ts"],"version":"5.9.2"}
+{"root":["./src/index.ts","./src/queue/queue.ts","./src/redis/redis.ts","./src/ws/websocket.ts"],"version":"5.9.2"}
