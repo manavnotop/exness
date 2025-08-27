@@ -16,7 +16,7 @@ async function connectRedis() {
 }
 
 async function startBatchProcess(){
-  const BATCH_SIZE = 100
+  const BATCH_SIZE = 1000
   const FLUSH_INTERVAL = 5000
 
   let batch: any[] = []

@@ -21,9 +21,11 @@ model User{
 }
 
 model Trade {
-  id          Int        @id @default(autoincrement())
+  id          Int         @default(autoincrement())
   symbol      String      
-  price       String
-  quantity    String
-  trade_time  DateTime
+  price       Decimal     @db.Decimal(18,8)
+  quantity    Decimal     @db.Decimal(18, 8)
+  trade_time  DateTime    @db.Timestamp(6)
+
+  @@id([id, trade_time])
 }
