@@ -33,9 +33,11 @@ async function startBatchProcess(){
           quantity: trade.data.q,
           trade_time: new Date(Number(trade.data.T)),
         })),
-        skipDuplicates: true
       })
       console.log(`Inserted batch of ${BATCH_SIZE} length`);
+
+      batch = [];
+      lastFlushDate = Date.now();
     }
     catch(error){
       console.error("Failed to insert in DB", error);
