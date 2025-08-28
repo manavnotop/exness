@@ -5,8 +5,12 @@
   "exports": {
     "./client": "./src/index.ts"
   },
+  "type": "commonjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "setup:db": "docker exec -i postgres_db psql -U postgres -d postgres < ./setup_timescaledb.sql",
+    "verify:db": "docker exec -i postgres_db psql -U postgres -d postgres < ./verify_timescaledb.sql"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*"
@@ -17,6 +21,8 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "6.2.1",
+    "@types/pg": "^8.15.5",
+    "pg": "^8.16.3",
     "prisma": "^6.2.1"
   }
 }

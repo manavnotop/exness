@@ -28,4 +28,5 @@ model Trade {
   trade_time  DateTime    @db.Timestamp(6)
 
   @@id([id, trade_time])
+  @@index([symbol, trade_time])
 }

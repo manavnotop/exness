@@ -24,7 +24,9 @@ SELECT
   MAX(price) AS high,
   MIN(price) AS low,
   LAST(price, trade_time) AS close,
-  SUM(quantity) AS volume
+  SUM(quantity) AS quantity_total,
+  SUM(price * quantity) AS volume,
+  COUNT(*) AS trade_count
 FROM "Trade"
 GROUP BY time_bucket('1 minute', trade_time), symbol;
 
@@ -38,7 +40,9 @@ SELECT
   MAX(price) AS high,
   MIN(price) AS low,
   LAST(price, trade_time) AS close,
-  SUM(quantity) AS volume
+  SUM(quantity) AS quantity_total,
+  SUM(price * quantity) AS volume,
+  COUNT(*) AS trade_count
 FROM "Trade"
 GROUP BY time_bucket('5 minutes', trade_time), symbol;
 
@@ -52,7 +56,9 @@ SELECT
   MAX(price) AS high,
   MIN(price) AS low,
   LAST(price, trade_time) AS close,
-  SUM(quantity) AS volume
+  SUM(quantity) AS quantity_total,
+  SUM(price * quantity) AS volume,
+  COUNT(*) AS trade_count
 FROM "Trade"
 GROUP BY time_bucket('15 minutes', trade_time), symbol;
 
@@ -66,7 +72,9 @@ SELECT
   MAX(price) AS high,
   MIN(price) AS low,
   LAST(price, trade_time) AS close,
-  SUM(quantity) AS volume
+  SUM(quantity) AS quantity_total,
+  SUM(price * quantity) AS volume,
+  COUNT(*) AS trade_count
 FROM "Trade"
 GROUP BY time_bucket('1 hour', trade_time), symbol;
 
@@ -80,37 +88,11 @@ SELECT
   MAX(price) AS high,
   MIN(price) AS low,
   LAST(price, trade_time) AS close,
-  SUM(quantity) AS volume
+  SUM(quantity) AS quantity_total,
+  SUM(price * quantity) AS volume,
+  COUNT(*) AS trade_count
 FROM "Trade"
 GROUP BY time_bucket('1 day', trade_time), symbol;
-
--- 15-day
-CREATE MATERIALIZED VIEW trade_15d_cagg
-WITH (timescaledb.continuous) AS
-SELECT 
-  time_bucket('15 days', trade_time) AS time,
-  symbol,
-  FIRST(price, trade_time) AS open,
-  MAX(price) AS high,
-  MIN(price) AS low,
-  LAST(price, trade_time) AS close,
-  SUM(quantity) AS volume
-FROM "Trade"
-GROUP BY time_bucket('15 days', trade_time), symbol;
-
--- 30-day
-CREATE MATERIALIZED VIEW trade_30d_cagg
-WITH (timescaledb.continuous) AS
-SELECT 
-  time_bucket('30 days', trade_time) AS time,
-  symbol,
-  FIRST(price, trade_time) AS open,
-  MAX(price) AS high,
-  MIN(price) AS low,
-  LAST(price, trade_time) AS close,
-  SUM(quantity) AS volume
-FROM "Trade"
-GROUP BY time_bucket('30 days', trade_time), symbol;
 
 -- Add refresh policies (use DO blocks to avoid errors if already exist)
 DO $$ BEGIN
@@ -156,22 +138,4 @@ DO $$ BEGIN
     schedule_interval => INTERVAL '1 day');
 EXCEPTION WHEN others THEN
   RAISE NOTICE 'Policy for trade_1d_cagg already exists or error: %', SQLERRM;
-END $$;
-
-DO $$ BEGIN
-  PERFORM add_continuous_aggregate_policy('trade_15d_cagg',
-    start_offset => INTERVAL '60 days',
-    end_offset => INTERVAL '30 days',
-    schedule_interval => INTERVAL '15 days');
-EXCEPTION WHEN others THEN
-  RAISE NOTICE 'Policy for trade_15d_cagg already exists or error: %', SQLERRM;
-END $$;
-
-DO $$ BEGIN
-  PERFORM add_continuous_aggregate_policy('trade_30d_cagg',
-    start_offset => INTERVAL '120 days',
-    end_offset => INTERVAL '60 days',
-    schedule_interval => INTERVAL '30 days');
-EXCEPTION WHEN others THEN
-  RAISE NOTICE 'Policy for trade_30d_cagg already exists or error: %', SQLERRM;
 END $$;
