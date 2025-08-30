@@ -3,26 +3,36 @@
 import { useState } from 'react';
 import Chart from './Chart';
 import SymbolSelector from './SymbolSelector';
+import IntervalSelector from './IntervalSelector';
 
 export default function MiddleColumn() {
   const [selectedSymbol, setSelectedSymbol] = useState('BTCUSDT');
+  const [selectedInterval, setSelectedInterval] = useState('1-minute');
 
   const handleSymbolChange = (newSymbol: string) => {
-    console.log('🔄 MiddleColumn: Symbol changing from', selectedSymbol, 'to', newSymbol);
     setSelectedSymbol(newSymbol);
   };
 
-  console.log('📊 MiddleColumn: Current selectedSymbol is:', selectedSymbol);
+  const handleIntervalChange = (newInterval: string) => {
+    setSelectedInterval(newInterval);
+  };
+
 
   return (
     <div className="h-full bg-white flex flex-col">
       {/* Chart Section */}
       <div className="p-2 border-b border-gray-200">
         <div className="flex items-center justify-between mb-1">
-          <SymbolSelector 
-            selectedSymbol={selectedSymbol} 
-            onSymbolChange={handleSymbolChange} 
-          />
+          <div className="flex items-center space-x-3">
+            <SymbolSelector 
+              selectedSymbol={selectedSymbol} 
+              onSymbolChange={handleSymbolChange} 
+            />
+            <IntervalSelector
+              selectedInterval={selectedInterval}
+              onIntervalChange={handleIntervalChange}
+            />
+          </div>
           <div className="flex items-center space-x-3">
             <div className="text-sm">
               <span className="text-gray-500">Bid: </span>
@@ -37,7 +47,7 @@ export default function MiddleColumn() {
         
         {/* Chart Container */}
         <div className="w-full h-[32rem] bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
-          <Chart symbol={selectedSymbol} />
+          <Chart symbol={selectedSymbol} interval={selectedInterval} />
         </div>
       </div>
 

@@ -15,7 +15,18 @@ export default function SymbolSelector({ selectedSymbol, onSymbolChange }: Symbo
   useEffect(() => {
     const fetchSymbols = async () => {
       try {
-        const response = await fetch('http://localhost:8001/symbols');
+        // Get the base URL dynamically
+        const getBaseUrl = () => {
+          if (typeof window !== 'undefined') {
+            const protocol = window.location.protocol;
+            const hostname = window.location.hostname;
+            const port = '8001'; // HTTP app port
+            return `${protocol}//${hostname}:${port}`;
+          }
+          return 'http://localhost:8001'; // Fallback
+        };
+
+        const response = await fetch(`${getBaseUrl()}/symbols`);
         if (!response.ok) {
           throw new Error(`Failed to fetch symbols: ${response.status}`);
         }

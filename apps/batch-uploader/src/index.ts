@@ -16,8 +16,8 @@ async function connectRedis() {
 }
 
 async function startBatchProcess(){
-  const BATCH_SIZE = 5000
-  const FLUSH_INTERVAL = 5000
+  const BATCH_SIZE = 500
+  const FLUSH_INTERVAL = 500000
 
   let batch: any[] = []
   let lastFlushDate = Date.now();

@@ -29,12 +29,41 @@ interface APIResponse {
   candles: APICandle[];
 }
 
-export default function Chart({ symbol = 'EUR/USD' }: { symbol?: string }) {
+export default function Chart({ symbol = 'EUR/USD', interval = '1-minute' }: { symbol?: string; interval?: string }) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Get the base URL dynamically
+  const getBaseUrl = () => {
+    if (typeof window !== 'undefined') {
+      const protocol = window.location.protocol;
+      const hostname = window.location.hostname;
+      const port = '8001'; // HTTP app port
+      return `${protocol}//${hostname}:${port}`;
+    }
+    return 'http://localhost:8001'; // Fallback
+  };
+
+  // Get optimal bar spacing based on interval
+  const getOptimalBarSpacing = (selectedInterval: string) => {
+    switch (selectedInterval) {
+      case '1-minute':
+        return 2; // Tighter spacing for 1-minute data
+      case '5-minutes':
+        return 3; // Slightly more spacing for 5-minute data
+      case '15-minutes':
+        return 4; // More spacing for 15-minute data
+      case '1-hour':
+        return 6; // Even more spacing for hourly data
+      case '24-hours':
+        return 8; // Most spacing for daily data
+      default:
+        return 3; // Default spacing
+    }
+  };
 
   // Initialize chart
   useEffect(() => {
@@ -54,14 +83,14 @@ export default function Chart({ symbol = 'EUR/USD' }: { symbol?: string }) {
       timeScale: {
         timeVisible: true,
         secondsVisible: false,
-        barSpacing: 12, // Much more spacing between bars
-        fixLeftEdge: true,
-        lockVisibleTimeRangeOnResize: true,
-        rightBarStaysOnScroll: true,
+        barSpacing: getOptimalBarSpacing(interval), // Dynamic spacing based on interval
+        fixLeftEdge: false, // Allow left edge to move for better fitting
+        lockVisibleTimeRangeOnResize: false, // Allow view to adjust
+        rightBarStaysOnScroll: false, // Don't force right bar to stay
         borderVisible: false,
         visible: true,
-        rightOffset: 40, // Much more space on the right
-        minBarSpacing: 8, // Higher minimum spacing
+        rightOffset: 20, // Reduced right offset
+        minBarSpacing: 2, // Reduced minimum spacing
         // Reduce label density
         ticksVisible: true,
         // Custom time formatter that shows shorter labels
@@ -89,16 +118,16 @@ export default function Chart({ symbol = 'EUR/USD' }: { symbol?: string }) {
       },
       // Add left price scale configuration for better alignment
       leftPriceScale: {
-        visible: true,
+        visible: false, // Hide left price scale
+      },
+      // Add right price scale configuration
+      rightPriceScale: {
+        visible: true, // Show right price scale
         borderVisible: false,
         scaleMargins: {
           top: 0.1,
           bottom: 0.1,
         },
-      },
-      // Add right price scale configuration
-      rightPriceScale: {
-        visible: false, // Hide right price scale to save space
       },
     });
 
@@ -127,25 +156,21 @@ export default function Chart({ symbol = 'EUR/USD' }: { symbol?: string }) {
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, []);
+  }, [symbol, interval]);
 
   // Fetch and update chart data
   useEffect(() => {
-    console.log('🔄 Chart useEffect triggered - Symbol changed to:', symbol);
     
     const fetchData = async () => {
       if (!seriesRef.current) {
-        console.log('❌ Series not ready, skipping fetch');
         return;
       }
 
-      console.log('📡 Fetching data for symbol:', symbol);
       setIsLoading(true);
       setError(null);
 
       try {
-        const url = `http://localhost:8001/candles?symbol=${encodeURIComponent(symbol)}&interval=1-minute&limit=100`;
-        console.log('🌐 API URL:', url);
+        const url = `${getBaseUrl()}/candles?symbol=${encodeURIComponent(symbol)}&interval=${interval}&limit=100`;
         
         const response = await fetch(url);
 
@@ -154,11 +179,8 @@ export default function Chart({ symbol = 'EUR/USD' }: { symbol?: string }) {
         }
 
         const data: APIResponse = await response.json();
-        console.log('📊 Raw API response:', data);
-        console.log('📈 Number of candles received:', data.candles?.length || 0);
 
         if (!data.candles || data.candles.length === 0) {
-          console.log('⚠️ No candles data received for symbol:', symbol);
           setError(`No data available for ${symbol}`);
           return;
         }
@@ -186,12 +208,10 @@ export default function Chart({ symbol = 'EUR/USD' }: { symbol?: string }) {
           return filtered;
         };
 
-        const filteredCandles = filterData(data.candles, 50); // Limit to 50 data points
-        console.log('🔍 Filtered candles count:', filteredCandles.length);
+        const filteredCandles = filterData(data.candles, 100); // Increased to 100 data points for better visibility
 
         const chartData: CandlestickData[] = filteredCandles.map((candle: APICandle) => {
           // Debug: log the raw time value
-          console.log('🕐 Raw candle time:', candle.time, 'Type:', typeof candle.time);
           
           let timeValue: UTCTimestamp;
 
@@ -199,16 +219,13 @@ export default function Chart({ symbol = 'EUR/USD' }: { symbol?: string }) {
             // ISO datetime string → convert to UNIX seconds
             const date = new Date(candle.time);
             timeValue = Math.floor(date.getTime() / 1000) as UTCTimestamp;
-            console.log('📅 String time converted:', candle.time, '→', date, '→', timeValue);
           } else if (typeof candle.time === 'number') {
             // Already UNIX timestamp → assume in seconds
             timeValue = candle.time as UTCTimestamp;
-            console.log('⏰ Number time:', candle.time, '→', timeValue);
           } else {
             // Fallback
             const date = new Date(candle.time);
             timeValue = Math.floor(date.getTime() / 1000) as UTCTimestamp;
-            console.log('🔄 Fallback time converted:', candle.time, '→', date, '→', timeValue);
           }
 
           return {
@@ -223,18 +240,18 @@ export default function Chart({ symbol = 'EUR/USD' }: { symbol?: string }) {
         // Sort data by time to ensure proper ordering
         chartData.sort((a, b) => a.time - b.time);
 
-        // Optional: check for duplicates before feeding into chart
-        console.log('📊 Final chart data count:', chartData.length);
-        console.log('🕐 Chart times:', chartData.map(d => new Date(d.time * 1000).toLocaleString()));
-
-        console.log('🎯 Setting chart data for symbol:', symbol);
         
         // Clear existing data before setting new data
         seriesRef.current.setData([]);
         
         // Set the new data
         seriesRef.current.setData(chartData);
-        console.log('✅ Chart data updated successfully');
+        
+        // Automatically fit the view to show all data
+        if (chartRef.current && chartData.length > 0) {
+          chartRef.current.timeScale().fitContent();
+        }
+        
         
       } catch (err) {
         console.error('❌ Error fetching chart data:', err);
@@ -247,12 +264,11 @@ export default function Chart({ symbol = 'EUR/USD' }: { symbol?: string }) {
     fetchData();
 
     // Refresh every 30 seconds
-    const interval = setInterval(fetchData, 60000);
+    const intervalId = setInterval(fetchData, 60000);
     return () => {
-      console.log('🧹 Cleaning up interval for symbol:', symbol);
-      clearInterval(interval);
+      clearInterval(intervalId);
     };
-  }, [symbol]);
+  }, [symbol, interval]);
 
   return (
     <div className="relative w-full h-full">
