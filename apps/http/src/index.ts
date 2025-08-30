@@ -31,9 +31,9 @@ app.get('/candles', async (req: Request, res: Response) => {
         error: "interval required or requested interval not allowed"
       })
     }
-    
-    const candles = await prismaClient.$queryRaw`
-      SELECT 
+
+    const query = Prisma.sql`
+     SELECT 
         time, 
         open, 
         high, 
@@ -46,7 +46,9 @@ app.get('/candles', async (req: Request, res: Response) => {
       WHERE symbol = ${symbol}
       ORDER BY time DESC
       LIMIT ${Number(limit)}
-`;
+    `;
+    
+    const candles = await prismaClient.$queryRaw(query);
     
     console.log("candles are : ", candles);
     return res.json({ symbol, interval, candles });
