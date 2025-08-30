@@ -1,10 +1,28 @@
+'use client';
+
+import { useState } from 'react';
+import Chart from './Chart';
+import SymbolSelector from './SymbolSelector';
+
 export default function MiddleColumn() {
+  const [selectedSymbol, setSelectedSymbol] = useState('BTCUSDT');
+
+  const handleSymbolChange = (newSymbol: string) => {
+    console.log('🔄 MiddleColumn: Symbol changing from', selectedSymbol, 'to', newSymbol);
+    setSelectedSymbol(newSymbol);
+  };
+
+  console.log('📊 MiddleColumn: Current selectedSymbol is:', selectedSymbol);
+
   return (
     <div className="h-full bg-white flex flex-col">
       {/* Chart Section */}
       <div className="p-2 border-b border-gray-200">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-lg font-semibold text-gray-900">EUR/USD</h2>
+          <SymbolSelector 
+            selectedSymbol={selectedSymbol} 
+            onSymbolChange={handleSymbolChange} 
+          />
           <div className="flex items-center space-x-3">
             <div className="text-sm">
               <span className="text-gray-500">Bid: </span>
@@ -18,12 +36,8 @@ export default function MiddleColumn() {
         </div>
         
         {/* Chart Container */}
-        <div className="w-full h-[32rem] bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center">
-          <div className="text-gray-500 text-center">
-            <div className="text-2xl mb-2">📈</div>
-            <p className="text-sm">Chart will be rendered here</p>
-            <p className="text-xs text-gray-400">Using lightweight-charts</p>
-          </div>
+        <div className="w-full h-[32rem] bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
+          <Chart symbol={selectedSymbol} />
         </div>
       </div>
 
@@ -38,7 +52,7 @@ export default function MiddleColumn() {
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <div>
-                  <div className="font-medium text-green-900 text-sm">EUR/USD</div>
+                  <div className="font-medium text-green-900 text-sm">{selectedSymbol}</div>
                   <div className="text-xs text-green-700">Buy • 0.1 lots</div>
                 </div>
               </div>

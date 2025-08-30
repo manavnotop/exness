@@ -44,7 +44,7 @@ app.get('/candles', async (req: Request, res: Response) => {
         trade_count::text as trade_count
       FROM ${Prisma.raw(viewName)}
       WHERE symbol = ${symbol}
-      ORDER BY time DESC
+      ORDER BY time ASC
       LIMIT ${Number(limit)}
     `;
     
@@ -61,6 +61,26 @@ app.get('/candles', async (req: Request, res: Response) => {
     })
   }
 })
+
+app.get('/symbols', async (req: Request, res: Response) => {
+  try {
+    const query = Prisma.sql`
+      SELECT DISTINCT symbol 
+      FROM "Trade" 
+      ORDER BY symbol
+    `;
+    
+    const symbols = await prismaClient.$queryRaw<Array<{ symbol: string }>>(query);
+    
+    return res.json({ symbols: symbols.map((s) => s.symbol) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: "internal server error",
+      err
+    });
+  }
+});
 
 app.listen(8001, () => {
   console.log("server is running on part 8001")
