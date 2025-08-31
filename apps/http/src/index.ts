@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { prismaClient, Prisma } from '@repo/db/client'
+import { tradesRouter } from './routes/orders';
 
 const app = express();
 
@@ -81,6 +82,8 @@ app.get('/symbols', async (req: Request, res: Response) => {
     });
   }
 });
+
+app.use('/orders', tradesRouter);
 
 app.listen(8001, () => {
   console.log("server is running on part 8001")

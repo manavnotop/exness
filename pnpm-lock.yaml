@@ -42,6 +42,9 @@ importers:
       express:
         specifier: ^5.1.0
         version: 5.1.0
+      uuid:
+        specifier: ^11.1.0
+        version: 11.1.0
     devDependencies:
       '@repo/db':
         specifier: workspace:*

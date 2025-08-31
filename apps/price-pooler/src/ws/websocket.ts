@@ -27,6 +27,7 @@ export default class WebSocketInstance{
     this.ws.onmessage = async (event) => {
       const data = JSON.parse(event.data.toString());
       await redis.rPush("binance:trades", JSON.stringify(data))
+      
       await redis.publish("ws:events:trade", JSON.stringify(data))
     }
   }
