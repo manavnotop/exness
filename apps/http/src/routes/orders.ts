@@ -6,7 +6,7 @@ export const tradesRouter: Router = express.Router()
 
 // Mock global account for testing (in-memory)
 const mockAccount = {
-  balances: { USD: 10000 }, // Starting balance
+  balance: { USD: 10000 }, // Starting balance
   usedMargin: 0,
 }
 
@@ -72,7 +72,7 @@ tradesRouter.post('/open', (req: Request<{}, {}, OpenTradeRequest>, res: Respons
   const positionValue = volume * (type === 'Buy' ? currentBuy : currentSell)
   const margin = positionValue / leverage
 
-  if (mockAccount.balances.USD - mockAccount.usedMargin < margin) {
+  if (mockAccount.balance.USD - mockAccount.usedMargin < margin) {
     return res.json({
       message: 'insufficient balance',
     })
@@ -101,7 +101,7 @@ tradesRouter.post('/open', (req: Request<{}, {}, OpenTradeRequest>, res: Respons
 
   return res.json({
     orderId: openTradeId,
-    balance: mockAccount.balances.USD,
+    balance: mockAccount.balance.USD,
     open_price: openPrice / Math.pow(10, currentAsset.decimal),
     current_price: currentPrice / Math.pow(10, currentAsset.decimal),
     margin,
@@ -149,7 +149,7 @@ tradesRouter.post('/close', (req: Request<{}, {}, CloseTradeRequest>, res: Respo
 
   // Convert PnL to decimal and update balance
   const pnlInUsd = pnl / Math.pow(10, assetData.decimal)
-  mockAccount.balances.USD += pnlInUsd
+  mockAccount.balance.USD += pnlInUsd
   mockAccount.usedMargin -= trade.margin
 
   // Remove the trade
@@ -158,7 +158,7 @@ tradesRouter.post('/close', (req: Request<{}, {}, CloseTradeRequest>, res: Respo
   return res.json({
     status: 'success',
     message: `Trade closed. PnL: ${pnlInUsd.toFixed(2)} USD`,
-    balance: mockAccount.balances.USD,
+    balance: mockAccount.balance.USD,
     pnl: pnlInUsd,
   })
 })
